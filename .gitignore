@@ -1,0 +1,9 @@
+# Build scratch / staged artifacts
+/out/
+/work/
+*.tar.xz
+*.tar.gz
+# Local actionlint binary
+/actionlint
+# Controller scratch (progress ledger)
+/.superpowers/
