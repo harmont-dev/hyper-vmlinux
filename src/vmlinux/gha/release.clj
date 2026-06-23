@@ -33,11 +33,11 @@
             :else (throw (ex-info (str "gh release upload failed for " asset) {:asset asset}))))))
 
 (defn create
-  [sha vmlinux-builds]
+  [sha assets]
   (let [tag (release-tag sha)]
     (when-not (exists? sha)
       (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha)))
-    (->> vmlinux-builds
+    (->> assets
          (mapv (fn [build]
                  (future (let [asset (str (fs/parent (:binary-path build)) "/" (asset-name build))]
                            (fs/copy (:binary-path build) asset {:replace-existing true})
