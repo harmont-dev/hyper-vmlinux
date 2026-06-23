@@ -24,15 +24,24 @@
       :exit
       zero?))
 
+(defn- upload!
+  [tag asset]
+  (loop [attempt 1]
+    (let [exit (:exit (shell {:continue true} "gh" "release" "upload" tag asset "--clobber"))]
+      (cond
+        (zero? exit) :ok
+        (< attempt 6) (do (Thread/sleep (* attempt 2000)) (recur (inc attempt)))
+        :else (throw (ex-info (str "gh release upload failed for " asset) {:asset asset}))))))
+
 (defn create
   [sha vmlinux-builds]
-  (assert (not (exists? sha)) (str "release already exists: " (release-tag sha)))
   (let [tag (release-tag sha)]
-    (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha))
+    (when-not (exists? sha)
+      (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha)))
     (->> vmlinux-builds
          (mapv (fn [build]
                  (future (let [asset (str (fs/parent (:binary-path build)) "/" (asset-name build))]
                            (fs/copy (:binary-path build) asset {:replace-existing true})
-                           (shell "gh" "release" "upload" tag asset)))))
+                           (upload! tag asset)))))
          (run! deref))
     tag))
