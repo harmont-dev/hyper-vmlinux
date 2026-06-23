@@ -3,15 +3,15 @@
 Firecracker-bootable Linux kernel builds, published as GitHub Releases.
 
 On manual dispatch, the **Build & publish vmlinux** workflow builds a
-Firecracker boot image for every config in `_hypercfg/` and publishes them all
+Firecracker boot image for every config in `configs/` and publishes them all
 into a single rolling `latest` release, alongside an aggregate `index.json`.
 Consumed by [`harmont-dev/hyper`](https://github.com/harmont-dev/hyper).
 
 ## Adding a target
 
 Drop a config named `<arch>-<series>[-<variant>].config` (e.g.
-`x86_64-6.6.config`) into `_hypercfg/`, add its upstream URL to
-`_hypercfg/sources.json`, and run the workflow. `arch` is `x86_64` or
+`x86_64-6.6.config`) into `configs/`, add its upstream URL to
+`sources.json` (repo top level), and run the workflow. `arch` is `x86_64` or
 `aarch64`; `series` is `MAJOR.MINOR`. Example `sources.json` entry:
 `"x86_64-6.6": "https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/resources/guest_configs/microvm-kernel-ci-x86_64-6.6.config"`
 

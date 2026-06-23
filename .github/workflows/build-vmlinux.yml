@@ -2,11 +2,6 @@ name: Build & publish vmlinux
 
 on:
   workflow_dispatch:
-    inputs:
-      only:
-        description: "Comma-separated config names to build (empty = all)"
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -24,18 +19,11 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
-      - name: Generate build matrix from _hypercfg
+      - name: Generate build matrix from configs
         id: gen
-        env:
-          ONLY: ${{ inputs.only }}
         run: |
           set -euo pipefail
-          only="$ONLY"
-          entries="$(bash scripts/parse-configs.sh _hypercfg)"
-          if [[ -n "$only" ]]; then
-            filter="$(echo "$only" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R . | jq -cs .)"
-            entries="$(echo "$entries" | jq -c --argjson keep "$filter" 'select(.name as $n | $keep | index($n))')"
-          fi
+          entries="$(bash scripts/parse-configs.sh configs)"
           matrix="$(echo "$entries" | jq -cs '{include: .}')"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "$matrix" | jq .
@@ -137,7 +125,7 @@ jobs:
           if ! gh release view "$REL_TAG" --repo "$REPO" >/dev/null 2>&1; then
             gh release create "$REL_TAG" --repo "$REPO" \
               --title "Firecracker vmlinux images (rolling latest)" \
-              --notes "All published kernel images, one per _hypercfg config. Each \`<artifact>\` ships a sibling \`<artifact>.sha256\` and \`<artifact>.manifest.json\`; \`index.json\` lists every artifact with download URLs and checksums for harmont-dev/hyper."
+              --notes "All published kernel images, one per configs/ config. Each \`<artifact>\` ships a sibling \`<artifact>.sha256\` and \`<artifact>.manifest.json\`; \`index.json\` lists every artifact with download URLs and checksums for harmont-dev/hyper."
           fi
           mapfile -t files < <(find dist -type f | sort)
           echo "Uploading ${#files[@]} build files + index.json to release '$REL_TAG'"

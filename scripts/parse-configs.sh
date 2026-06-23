@@ -3,8 +3,8 @@
 # compact JSON matrix entry per config (one per line) on stdout.
 set -euo pipefail
 
-dir="${1:-_hypercfg}"
-sources="$dir/sources.json"
+dir="${1:-configs}"
+sources="$(dirname "$dir")/sources.json"
 
 shopt -s nullglob
 for f in "$dir"/*.config; do
