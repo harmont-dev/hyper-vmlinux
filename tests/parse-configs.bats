@@ -41,6 +41,7 @@ teardown() { rm -rf "$TMP"; }
   [ "$(echo "$line" | jq -r .runner)" = "ubuntu-24.04-arm" ]
   [ "$(echo "$line" | jq -r .target)" = "Image" ]
   [ "$(echo "$line" | jq -r .vdir)" = "v5.x" ]
+  [ "$(echo "$line" | jq -r .fc_origin)" = "" ]
 }
 
 @test "parses multi-token variant" {
