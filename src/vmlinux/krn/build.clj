@@ -5,7 +5,7 @@
    [babashka.process :refer [shell]]
    [clojure.string :as str]))
 
-(defrecord VmLinuxBuild [arch version binary-path sha256-sum])
+(defrecord VmLinuxBuild [name arch version binary-path sha256-sum])
 
 (defn- nproc [] (.availableProcessors (Runtime/getRuntime)))
 
@@ -21,10 +21,10 @@
    :aarch64 {:kbuild-arch "arm64", :target "Image", :boot-subpath "arch/arm64/boot/Image"}})
 
 (defn compile
-  [path {:keys [arch version config-file]}]
+  [path {:keys [name arch version config-file]}]
   (let [{:keys [kbuild-arch target boot-subpath]} (arch-kbuild arch)]
     (fs/copy (fs/absolutize config-file) (str path "/.config") {:replace-existing true})
     (shell {:dir path} "make" (str "ARCH=" kbuild-arch) "olddefconfig")
     (shell {:dir path} "make" (str "ARCH=" kbuild-arch) (str "-j" (nproc)) target)
     (let [binary (str path "/" boot-subpath)]
-      (->VmLinuxBuild arch version binary (file-sha256 binary)))))
+      (->VmLinuxBuild name arch version binary (file-sha256 binary)))))
