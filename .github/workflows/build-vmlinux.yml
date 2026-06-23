@@ -75,9 +75,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/build-kernel.sh | tee "$RUNNER_TEMP/build-out.env"
-          while IFS='=' read -r k v; do
-            [[ -n "$k" ]] && echo "$k=$v" >> "$GITHUB_OUTPUT"
-          done < "$RUNNER_TEMP/build-out.env"
+          grep -E '^(kernel_version|release_tag)=' "$RUNNER_TEMP/build-out.env" >> "$GITHUB_OUTPUT"
 
       - name: Create or update release
         env:
