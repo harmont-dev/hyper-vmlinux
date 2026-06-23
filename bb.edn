@@ -10,4 +10,8 @@
 
   release
   {:requires ([vmlinux.tasks.release :as release])
-   :task (apply release/-main *command-line-args*)}}}
+   :task (apply release/-main *command-line-args*)}
+
+  fmt
+  {:requires ([vmlinux.tasks.fmt :as fmt])
+   :task (apply fmt/-main *command-line-args*)}}}

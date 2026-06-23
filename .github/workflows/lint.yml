@@ -10,9 +10,29 @@ jobs:
   clj-kondo:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: DeLaGuardo/clojure-lint-action@2d6013175031096ae07bc9b90a07173029ad7dc9 # master
         with:
           clj-kondo-args: --lint src
           check-name: clj-kondo
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  actionlint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Check workflow files
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+        shell: bash
+
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: turtlequeue/setup-babashka@d78ec6570aea3b614bc695cafcceb82eb45c2af9 # v1.8.0
+        with:
+          babashka-version: 1.12.218
+      - name: Check formatting (zprint)
+        run: bb fmt check
