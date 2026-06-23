@@ -27,7 +27,7 @@
 (defn- upload!
   [tag asset]
   (loop [attempt 1]
-    (let [exit (:exit (shell {:continue true} "gh" "release" "upload" tag asset "--clobber"))]
+    (let [exit (:exit (shell {:continue true} "gh" "release" "upload" tag asset))]
       (cond (zero? exit) :ok
             (< attempt 6) (do (Thread/sleep (* attempt 2000)) (recur (inc attempt)))
             :else (throw (ex-info (str "gh release upload failed for " asset) {:asset asset}))))))
