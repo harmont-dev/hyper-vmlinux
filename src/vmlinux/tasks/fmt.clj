@@ -1,8 +1,9 @@
 (ns vmlinux.tasks.fmt
-  (:require [babashka.deps :as deps]
-            [babashka.fs :as fs]))
+  (:require
+   [babashka.deps :as deps]
+   [babashka.fs :as fs]))
 
-(def ^:private opts {:width 100, :style :community})
+(def ^:private opts {:width 100, :style [:community :how-to-ns]})
 
 (defn- sources [] (map str (fs/glob "." "{src/**/*.clj,manifest.clj}")))
 

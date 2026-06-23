@@ -1,7 +1,8 @@
 (ns vmlinux.gha.release
-  (:require [babashka.fs :as fs]
-            [babashka.process :refer [shell]]
-            [selmer.parser :as p]))
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :refer [shell]]
+   [selmer.parser :as p]))
 
 (defn- release-tag [sha] (str "release-" sha))
 
@@ -23,15 +24,23 @@
       :exit
       zero?))
 
+(defn- upload!
+  [tag asset]
+  (loop [attempt 1]
+    (let [exit (:exit (shell {:continue true} "gh" "release" "upload" tag asset))]
+      (cond (zero? exit) :ok
+            (< attempt 6) (do (Thread/sleep (* attempt 2000)) (recur (inc attempt)))
+            :else (throw (ex-info (str "gh release upload failed for " asset) {:asset asset}))))))
+
 (defn create
-  [sha vmlinux-builds]
-  (assert (not (exists? sha)) (str "release already exists: " (release-tag sha)))
+  [sha assets]
   (let [tag (release-tag sha)]
-    (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha))
-    (->> vmlinux-builds
+    (when-not (exists? sha)
+      (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha)))
+    (->> assets
          (mapv (fn [build]
                  (future (let [asset (str (fs/parent (:binary-path build)) "/" (asset-name build))]
                            (fs/copy (:binary-path build) asset {:replace-existing true})
-                           (shell "gh" "release" "upload" tag asset)))))
+                           (upload! tag asset)))))
          (run! deref))
     tag))

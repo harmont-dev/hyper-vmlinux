@@ -1,8 +1,9 @@
 (ns vmlinux.tasks.compile
-  (:require [manifest :as mf]
-            [vmlinux.gha.artifacts :as artifacts]
-            [vmlinux.krn.build :as kbuild]
-            [vmlinux.krn.src :as src]))
+  (:require
+   [manifest :as mf]
+   [vmlinux.gha.artifacts :as artifacts]
+   [vmlinux.krn.build :as kbuild]
+   [vmlinux.krn.src :as src]))
 
 (defn- by-name [name] (first (filter #(= name (:name %)) mf/builds)))
 

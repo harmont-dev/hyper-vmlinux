@@ -1,7 +1,8 @@
 (ns vmlinux.gha.artifacts
-  (:require [babashka.fs :as fs]
-            [clojure.edn :as edn]
-            [vmlinux.krn.build :as build]))
+  (:require
+   [babashka.fs :as fs]
+   [clojure.edn :as edn]
+   [vmlinux.krn.build :as build]))
 
 (defrecord VmLinuxArtifact [artifact-name])
 (defrecord ArtifactMeta [arch version binary sha256-sum])
