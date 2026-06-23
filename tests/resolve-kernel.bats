@@ -19,6 +19,8 @@ setup() {
 
 @test "does not match a different series (6.6.x)" {
   run bash "$SCRIPT" 6.1 "$FIX"
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -r .version)" = "6.1.10" ]
   [ "$(echo "$output" | jq -r .version)" != "6.6.1" ]
 }
 

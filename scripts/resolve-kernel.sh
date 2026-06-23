@@ -19,6 +19,7 @@ fi
 escaped="${series//./\\.}"
 
 # Match exactly "linux-<series>.<patch>.tar.xz" lines; emit "version sha".
+# Command substitution: a no-match grep (exit 1) yields an empty "$best", handled below; not aborted by set -e.
 best="$(
   grep -E "  linux-${escaped}\.[0-9]+\.tar\.xz\$" <<<"$data" \
     | while read -r sha file; do
