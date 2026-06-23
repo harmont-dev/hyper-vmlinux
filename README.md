@@ -12,7 +12,8 @@ release per config, plus an aggregate discovery index. Consumed by
 Drop a config named `<arch>-<series>[-<variant>].config` (e.g.
 `x86_64-6.6.config`) into `_hypercfg/`, add its upstream URL to
 `_hypercfg/sources.json`, and run the workflow. `arch` is `x86_64` or
-`aarch64`; `series` is `MAJOR.MINOR`.
+`aarch64`; `series` is `MAJOR.MINOR`. Example `sources.json` entry:
+`"x86_64-6.6": "https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/resources/guest_configs/microvm-kernel-ci-x86_64-6.6.config"`
 
 ## How a build works
 
@@ -71,10 +72,12 @@ For each config the workflow:
 }
 ```
 
+**Note:** each entry under `configs` is the release's full `manifest.json` **plus** three index-only fields — `artifact_url`, `sha256_url`, and `manifest_url`. The per-release `manifest.json` asset itself contains every field shown here *except* those three URLs (they are added by the index job, which knows each release's download URLs).
+
 ### Recommended consumer flow
 
 1. `GET` the `hypercfg-index` release's `index.json`.
 2. Look up `configs["<arch>-<series>[-<variant>]"]`.
-3. Download `artifact_url`; verify its sha256 equals `sha256`.
+3. Download `artifact_url`; verify its sha256 equals `sha256` (or equivalently, run `sha256sum -c <artifact>.sha256` against the downloaded artifact).
 4. Use it as the Firecracker `kernel_image_path` (`vmlinux` for x86_64,
    `Image` for aarch64).
