@@ -39,3 +39,67 @@ jobs:
           matrix="$(echo "$entries" | jq -cs '{include: .}')"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "$matrix" | jq .
+
+  build:
+    needs: prepare
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential bc bison flex libssl-dev libelf-dev \
+            xz-utils jq curl
+
+      - name: Build kernel and stage artifact
+        id: build
+        env:
+          NAME: ${{ matrix.name }}
+          CONFIG: ${{ github.workspace }}/${{ matrix.config }}
+          KBUILD_ARCH: ${{ matrix.kbuild_arch }}
+          SERIES: ${{ matrix.series }}
+          VARIANT: ${{ matrix.variant }}
+          VDIR: ${{ matrix.vdir }}
+          TARGET: ${{ matrix.target }}
+          ARTIFACT: ${{ matrix.artifact }}
+          FC_ORIGIN: ${{ matrix.fc_origin }}
+          WORKDIR: ${{ runner.temp }}/work
+          OUTDIR: ${{ github.workspace }}/out
+          GIT_REF: ${{ github.sha }}
+          RUNNER_NAME: ${{ matrix.runner }}
+        run: |
+          set -euo pipefail
+          bash scripts/build-kernel.sh | tee "$RUNNER_TEMP/build-out.env"
+          while IFS='=' read -r k v; do
+            [[ -n "$k" ]] && echo "$k=$v" >> "$GITHUB_OUTPUT"
+          done < "$RUNNER_TEMP/build-out.env"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.build.outputs.release_tag }}
+          NAME: ${{ matrix.name }}
+          VERSION: ${{ steps.build.outputs.kernel_version }}
+          ARTIFACT: ${{ matrix.artifact }}
+        run: |
+          set -euo pipefail
+          title="vmlinux ${NAME} (linux ${VERSION})"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "$title" \
+              --notes "Firecracker-bootable \`${ARTIFACT}\` for config \`${NAME}\`, built from Linux ${VERSION}. Verify with the bundled \`${ARTIFACT}.sha256\` / \`manifest.json\`."
+          fi
+          gh release upload "$TAG" \
+            "out/${ARTIFACT}" "out/${ARTIFACT}.sha256" "out/manifest.json" \
+            --clobber
+
+      - name: Upload manifest as workflow artifact (for index job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: manifest-${{ matrix.name }}
+          path: out/manifest.json
+          if-no-files-found: error
