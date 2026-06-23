@@ -49,12 +49,13 @@ if [[ "${HYPERCFG_DRY_RUN:-}" == "1" ]]; then
 fi
 
 # 2. Download + verify the source tarball.
-cd "$WORKDIR"
-curl -fSL "$url" -o "$tarball"
-echo "${src_sha}  ${tarball}" | sha256sum -c -
+tarball_path="$WORKDIR/$tarball"
+curl -fSL "$url" -o "$tarball_path"
+echo "${src_sha}  ${tarball_path}" | sha256sum -c -
 
 # 3. Extract.
-tar -xf "$tarball"
+cd "$WORKDIR"
+tar -xf "$tarball_path"
 srcdir="$WORKDIR/linux-${version}"
 cd "$srcdir"
 

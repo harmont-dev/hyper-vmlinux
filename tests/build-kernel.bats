@@ -29,6 +29,7 @@ run_dry() {
 
 @test "dry run stages artifact, sha256 and manifest" {
   run run_dry
+  [ "$status" -eq 0 ]
   [ -f "$TMP/out/vmlinux" ]
   [ -f "$TMP/out/vmlinux.sha256" ]
   [ -f "$TMP/out/manifest.json" ]
