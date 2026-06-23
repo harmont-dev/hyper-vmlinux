@@ -14,9 +14,7 @@
    "VMLinux images used within [Hyper](https://github.com/harmont-dev/hyper) built off of `{{sha}}`."
    {:sha sha}))
 
-(defn- asset-name
-  [{:keys [arch version binary-path]}]
-  (str (fs/file-name binary-path) "-" (name arch) "-" version))
+(defn- asset-name [{:keys [name]}] (str "vmlinux-" name))
 
 (defn exists?
   [sha]
