@@ -1,0 +1,13 @@
+{:paths ["." "src"]
+ :tasks
+ {gha-matrix-json
+  {:requires ([vmlinux.tasks.matrix :as matrix])
+   :task (matrix/-main)}
+
+  build
+  {:requires ([vmlinux.tasks.compile :as compile])
+   :task (apply compile/-main *command-line-args*)}
+
+  release
+  {:requires ([vmlinux.tasks.release :as release])
+   :task (apply release/-main *command-line-args*)}}}

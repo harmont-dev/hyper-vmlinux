@@ -1,0 +1,23 @@
+{:linters
+ {:unused-binding               {:level :error}
+  :unused-namespace             {:level :error}
+  :unused-referred-var          {:level :error}
+  :unused-private-var           {:level :error}
+  :unresolved-symbol            {:level :error}
+  :unresolved-namespace         {:level :error}
+  :unresolved-var               {:level :error}
+  :type-mismatch                {:level :error}
+  :redundant-do                 {:level :error}
+  :redundant-let                {:level :error}
+  :redundant-fn-wrapper         {:level :error}
+  :missing-else-branch          {:level :error}
+  :used-underscored-binding     {:level :error}
+  :unsorted-required-namespaces {:level :error}
+  :consistent-alias             {:level :error}
+  :single-key-in                {:level :error}
+  :refer-all                    {:level :error}
+  :duplicate-require            {:level :error}
+  :namespace-name-mismatch      {:level :error}
+  :unexpected-recur             {:level :error}
+  :condition-always-true        {:level :error}
+  :shadowed-var                 {:level :error :exclude [name runner]}}}

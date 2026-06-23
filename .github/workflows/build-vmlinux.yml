@@ -1,4 +1,4 @@
-name: Build & publish vmlinux
+name: Create a new Release
 
 on:
   workflow_dispatch:
@@ -17,16 +17,16 @@ jobs:
       matrix: ${{ steps.gen.outputs.matrix }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-      - name: Generate build matrix from configs
+      - uses: turtlequeue/setup-babashka@d78ec6570aea3b614bc695cafcceb82eb45c2af9 # v1.8.0
+        with:
+          babashka-version: 1.12.218
+      - name: Generate build matrix from manifest.clj
         id: gen
         run: |
           set -euo pipefail
-          entries="$(bash scripts/parse-configs.sh configs)"
-          matrix="$(echo "$entries" | jq -cs '{include: .}')"
+          matrix="$(bb gha-matrix-json)"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "$matrix" | jq .
+          echo "$matrix"
 
   build:
     needs: prepare
@@ -37,96 +37,46 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential bc bison flex libssl-dev libelf-dev \
-            xz-utils jq curl
+      - name: Install build dependencies (cached)
+        uses: awalsh128/cache-apt-pkgs-action@681749ae568c81c2037cb9185e38b709b261bd2f # v1.6.1
+        with:
+          packages: build-essential bc bison flex libssl-dev libelf-dev xz-utils curl
+          version: 1
+
+      - uses: turtlequeue/setup-babashka@d78ec6570aea3b614bc695cafcceb82eb45c2af9 # v1.8.0
+        with:
+          babashka-version: 1.12.218
 
       - name: Build kernel and stage artifact
         env:
           NAME: ${{ matrix.name }}
-          CONFIG: ${{ github.workspace }}/${{ matrix.config }}
-          KBUILD_ARCH: ${{ matrix.kbuild_arch }}
-          SERIES: ${{ matrix.series }}
-          VARIANT: ${{ matrix.variant }}
-          VDIR: ${{ matrix.vdir }}
-          TARGET: ${{ matrix.target }}
-          ARTIFACT: ${{ matrix.artifact }}
-          FC_ORIGIN: ${{ matrix.fc_origin }}
-          WORKDIR: ${{ runner.temp }}/work
-          OUTDIR: ${{ github.workspace }}/out
-          GIT_REF: ${{ github.sha }}
-          RUNNER_NAME: ${{ matrix.runner }}
-          RELEASE_TAG: latest
-        run: |
-          set -euo pipefail
-          bash scripts/build-kernel.sh
-          # Name the manifest per-artifact so every config coexists in one release.
-          mv "out/manifest.json" "out/${ARTIFACT}.manifest.json"
+        run: bb build "$NAME"
 
       - name: Upload build outputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: out-${{ matrix.name }}
-          path: |
-            out/${{ matrix.artifact }}
-            out/${{ matrix.artifact }}.sha256
-            out/${{ matrix.artifact }}.manifest.json
+          path: out/
           if-no-files-found: error
 
   publish:
     needs: build
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: turtlequeue/setup-babashka@d78ec6570aea3b614bc695cafcceb82eb45c2af9 # v1.8.0
+        with:
+          babashka-version: 1.12.218
+
       - name: Download all build outputs
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: out-*
           path: dist
 
-      - name: Build index.json
-        env:
-          REPO: ${{ github.repository }}
-          SERVER: ${{ github.server_url }}
-          REL_TAG: latest
-        run: |
-          set -euo pipefail
-          generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          configs="$(
-            find dist -name '*.manifest.json' -print0 \
-              | xargs -0 cat \
-              | jq -s \
-                  --arg base "$SERVER/$REPO/releases/download" \
-                  --arg tag "$REL_TAG" \
-                  'map({ (.name): (. + {
-                       artifact_url: ($base + "/" + $tag + "/" + .artifact),
-                       sha256_url:   ($base + "/" + $tag + "/" + .artifact + ".sha256"),
-                       manifest_url: ($base + "/" + $tag + "/" + .artifact + ".manifest.json")
-                     }) }) | add'
-          )"
-          jq -n \
-            --argjson configs "$configs" \
-            --arg repo "$REPO" \
-            --arg generated_at "$generated_at" \
-            --arg tag "$REL_TAG" \
-            '{ schema_version: 1, repo: $repo, release_tag: $tag, generated_at: $generated_at, configs: $configs }' \
-            > index.json
-          jq . index.json
-
-      - name: Publish single rolling release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          REL_TAG: latest
-        run: |
-          set -euo pipefail
-          if ! gh release view "$REL_TAG" --repo "$REPO" >/dev/null 2>&1; then
-            gh release create "$REL_TAG" --repo "$REPO" \
-              --title "Firecracker vmlinux images (rolling latest)" \
-              --notes "All published kernel images, one per configs/ config. Each \`<artifact>\` ships a sibling \`<artifact>.sha256\` and \`<artifact>.manifest.json\`; \`index.json\` lists every artifact with download URLs and checksums for harmont-dev/hyper."
-          fi
-          mapfile -t files < <(find dist -type f | sort)
-          echo "Uploading ${#files[@]} build files + index.json to release '$REL_TAG'"
-          gh release upload "$REL_TAG" --repo "$REPO" "${files[@]}" index.json --clobber
+          GIT_SHA: ${{ github.sha }}
+        run: bb release dist "$GIT_SHA"
