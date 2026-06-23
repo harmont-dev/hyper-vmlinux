@@ -22,7 +22,10 @@ version="$(jq -r .version <<<"$resolved")"
 src_sha="$(jq -r .sha256 <<<"$resolved")"
 tarball="$(jq -r .tarball <<<"$resolved")"
 url="$(jq -r .url <<<"$resolved")"
-release_tag="vmlinux-${NAME}-${version}"
+# Single-release mode: the workflow sets RELEASE_TAG (e.g. "latest") so every
+# config's manifest points at the one shared release. Falls back to a
+# per-config tag when unset (e.g. local/dry-run use).
+release_tag="${RELEASE_TAG:-vmlinux-${NAME}-${version}}"
 built_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 emit_outputs() {

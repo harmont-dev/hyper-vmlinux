@@ -20,10 +20,14 @@ for f in "$dir"/*.config; do
   fi
 
   case "$arch" in
-    x86_64)  kbuild_arch="x86_64"; runner="ubuntu-24.04";     target="vmlinux"; artifact="vmlinux" ;;
-    aarch64) kbuild_arch="arm64";  runner="ubuntu-24.04-arm"; target="Image";   artifact="Image"   ;;
+    x86_64)  kbuild_arch="x86_64"; runner="ubuntu-24.04";     target="vmlinux" ;;
+    aarch64) kbuild_arch="arm64";  runner="ubuntu-24.04-arm"; target="Image"   ;;
     *) echo "parse-configs: unknown arch '$arch' in '$f'" >&2; exit 1 ;;
   esac
+
+  # Unique artifact filename per config so all configs can share one release
+  # (e.g. vmlinux-x86_64-6.1, Image-aarch64-6.1). `target` stays the kbuild target.
+  artifact="${target}-${base}"
 
   major="${series%%.*}"
   vdir="v${major}.x"

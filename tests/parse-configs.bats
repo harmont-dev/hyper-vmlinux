@@ -27,7 +27,7 @@ teardown() { rm -rf "$TMP"; }
   [ "$(echo "$line" | jq -r .kbuild_arch)" = "x86_64" ]
   [ "$(echo "$line" | jq -r .runner)" = "ubuntu-24.04" ]
   [ "$(echo "$line" | jq -r .target)" = "vmlinux" ]
-  [ "$(echo "$line" | jq -r .artifact)" = "vmlinux" ]
+  [ "$(echo "$line" | jq -r .artifact)" = "vmlinux-x86_64-6.1" ]
   [ "$(echo "$line" | jq -r .series)" = "6.1" ]
   [ "$(echo "$line" | jq -r .variant)" = "" ]
   [ "$(echo "$line" | jq -r .vdir)" = "v6.x" ]
@@ -40,6 +40,7 @@ teardown() { rm -rf "$TMP"; }
   [ "$(echo "$line" | jq -r .kbuild_arch)" = "arm64" ]
   [ "$(echo "$line" | jq -r .runner)" = "ubuntu-24.04-arm" ]
   [ "$(echo "$line" | jq -r .target)" = "Image" ]
+  [ "$(echo "$line" | jq -r .artifact)" = "Image-aarch64-5.10" ]
   [ "$(echo "$line" | jq -r .vdir)" = "v5.x" ]
   [ "$(echo "$line" | jq -r .fc_origin)" = "" ]
 }
