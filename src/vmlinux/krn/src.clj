@@ -1,7 +1,8 @@
 (ns vmlinux.krn.src
-  (:require [babashka.fs :as fs]
-            [babashka.process :refer [shell]]
-            [clojure.string :as str]))
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :refer [shell]]
+   [clojure.string :as str]))
 
 (defrecord KernelSrc [tarball-url checksums-url])
 (defrecord KernelTree [path checksum])

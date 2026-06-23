@@ -1,8 +1,9 @@
 (ns vmlinux.krn.build
   (:refer-clojure :exclude [compile])
-  (:require [babashka.fs :as fs]
-            [babashka.process :refer [shell]]
-            [clojure.string :as str]))
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :refer [shell]]
+   [clojure.string :as str]))
 
 (defrecord VmLinuxBuild [arch version binary-path sha256-sum])
 

@@ -1,7 +1,8 @@
 (ns vmlinux.tasks.release
-  (:require [clojure.java.io :as io]
-            [vmlinux.gha.artifacts :as artifacts]
-            [vmlinux.gha.release :as release]))
+  (:require
+   [clojure.java.io :as io]
+   [vmlinux.gha.artifacts :as artifacts]
+   [vmlinux.gha.release :as release]))
 
 (defn- artifact-dirs
   [dir]

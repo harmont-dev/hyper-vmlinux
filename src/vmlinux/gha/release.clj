@@ -1,7 +1,8 @@
 (ns vmlinux.gha.release
-  (:require [babashka.fs :as fs]
-            [babashka.process :refer [shell]]
-            [selmer.parser :as p]))
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :refer [shell]]
+   [selmer.parser :as p]))
 
 (defn- release-tag [sha] (str "release-" sha))
 
