@@ -1,4 +1,4 @@
-# hypercfg
+# hyper-vmlinux
 
 Firecracker-bootable Linux kernel builds, published as GitHub Releases.
 
@@ -42,7 +42,7 @@ For each config the workflow:
 ```json
 {
   "schema_version": 1,
-  "repo": "harmont-dev/hypercfg",
+  "repo": "harmont-dev/hyper-vmlinux",
   "generated_at": "2026-06-23T00:00:00Z",
   "configs": {
     "x86_64-5.10-no-acpi": {
@@ -60,7 +60,7 @@ For each config the workflow:
       "source_tarball": "linux-5.10.240.tar.xz",
       "source_sha256": "<hex>",
       "firecracker_config_origin": "https://raw.githubusercontent.com/.../config",
-      "git_ref": "<hypercfg commit sha>",
+      "git_ref": "<hyper-vmlinux commit sha>",
       "built_at": "2026-06-23T00:00:00Z",
       "runner": "ubuntu-24.04",
       "release_tag": "vmlinux-x86_64-5.10-no-acpi-5.10.240",
