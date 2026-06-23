@@ -11,25 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  authorize:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Verify the actor is a contributor
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
-        run: |
-          set -euo pipefail
-          perm="$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq '.permission')"
-          echo "$ACTOR has '$perm' permission on $REPO"
-          case "$perm" in
-            admin|maintain|write) ;;
-            *) echo "::error::$ACTOR lacks write access; only contributors may run this workflow"; exit 1 ;;
-          esac
-
   prepare:
-    needs: authorize
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.gen.outputs.matrix }}

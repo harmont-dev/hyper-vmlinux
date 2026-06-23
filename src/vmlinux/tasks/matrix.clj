@@ -3,7 +3,7 @@
    [cheshire.core :as json]
    [manifest :as mf]))
 
-(def ^:private arch-runner {:x86_64 "ubuntu-24.04-32core", :aarch64 "ubuntu-24.04-arm-32core"})
+(def ^:private arch-runner {:x86_64 "ultralarge-24.04-x64", :aarch64 "ultralarge-24.04-aarch64"})
 
 (defn matrix
   []
