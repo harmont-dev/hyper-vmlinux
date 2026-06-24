@@ -2,6 +2,7 @@
   (:require
    [babashka.fs :as fs]
    [babashka.process :refer [shell]]
+   [cheshire.core :as json]
    [selmer.parser :as p]))
 
 (defn- release-tag [sha] (str "release-" sha))
@@ -30,6 +31,29 @@
             (< attempt 6) (do (Thread/sleep (* attempt 2000)) (recur (inc attempt)))
             :else (throw (ex-info (str "gh release upload failed for " asset) {:asset asset}))))))
 
+(defn- stage-asset!
+  "Copy the build binary to its release asset name and write a `<asset>.sha256`
+  sidecar in sha256sum(1) format. Returns the [asset sidecar] paths."
+  [build]
+  (let [name (asset-name build)
+        asset (str (fs/parent (:binary-path build)) "/" name)
+        sidecar (str asset ".sha256")]
+    (fs/copy (:binary-path build) asset {:replace-existing true})
+    (spit sidecar (str (:sha256-sum build) "  " name "\n"))
+    [asset sidecar]))
+
+(defn- manifest-json
+  [sha assets]
+  (json/generate-string {:sha sha,
+                         :builds (mapv (fn [{:keys [name arch version sha256-sum], :as build}]
+                                         {:name name,
+                                          :arch (clojure.core/name arch),
+                                          :version version,
+                                          :asset (asset-name build),
+                                          :sha256 sha256-sum})
+                                       assets)}
+                        {:pretty true}))
+
 (defn create
   [sha assets]
   (let [tag (release-tag sha)]
@@ -37,8 +61,11 @@
       (shell "gh" "release" "create" tag "--title" (title sha) "--notes" (notes sha)))
     (->> assets
          (mapv (fn [build]
-                 (future (let [asset (str (fs/parent (:binary-path build)) "/" (asset-name build))]
-                           (fs/copy (:binary-path build) asset {:replace-existing true})
-                           (upload! tag asset)))))
+                 (future (let [[asset sidecar] (stage-asset! build)]
+                           (upload! tag asset)
+                           (upload! tag sidecar)))))
          (run! deref))
+    (let [manifest (str (fs/parent (:binary-path (first assets))) "/manifest.json")]
+      (spit manifest (manifest-json sha assets))
+      (upload! tag manifest))
     tag))
